@@ -650,6 +650,25 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: ~1.25.10
+      # ================= 核心补丁开始 =================
+      - name: Patch AnyTLS Version for SFA
+        run: |
+          # 1. 回到上级目录克隆依赖库
+          cd ..
+          git clone https://github.com/anytls/sing-anytls.git
+          
+          # 2. 修改特征字符串
+          # 将 var Verison = "sing-anytls/0.0.12" 改为 var Verison = "anytls"
+          sed -i 's/Verison = .*/Verison = "anytls"/' sing-anytls/util/version.go
+          
+          # 验证修改是否成功（可选，会在日志中打印修改后的行）
+          grep "Verison =" sing-anytls/util/version.go
+          
+          # 3. 返回 sing-box 目录并强制替换依赖
+          cd sing-box
+          go mod edit -replace github.com/anytls/sing-anytls=../sing-anytls
+          go mod tidy
+      # ================= 核心补丁结束 =================
       - name: Setup Android NDK
         id: setup-ndk
         uses: nttld/setup-ndk@v1
